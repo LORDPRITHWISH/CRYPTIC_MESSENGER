@@ -30,7 +30,66 @@ chrome.runtime.onInstalled.addListener(() => {
     console.log("byfrost installed");
 });
 
-// chrome.runtime.onStartup.addListener(() => {
-//     set();
-//     console.log("byfrost started");
-// });
+
+// chrome.webRequest.onBeforeRequest.addListener(
+//     function (details) {
+//         console.log(`Blocking WebSocket: ${details.url}`);
+//         return { cancel: true };
+//     },
+//     { urls: ["ws://*/*", "wss://*/*"] }, // Match all WebSocket URLs
+//     ["blocking"]
+// );
+
+// // chrome.runtime.onStartup.addListener(() => {
+// //     set();
+// //     console.log("byfrost started");
+// // });
+
+
+// // web.whatsapp.com
+
+// chrome.webRequest.onBeforeRequest.addListener(
+//     (details) => {
+//         console.log("Blocked:", details.url);
+//         return { cancel: true };
+//     },
+//     { urls: ["*://*.whatsapp.com/*"], types: ["websocket"] },
+//     ["blocking"]
+// );
+
+
+// chrome.declarativeNetRequest.updateDynamicRules(
+//     { addRules: JSON.parse('[{"id":1,"priority":1,"action":{"type":"block"},"condition":{"urlFilter":"*://*.whatsapp.com/*","resourceTypes":["websocket"]}}]') },
+//     () => console.log("Rules added to block WhatsApp WebSocket.")
+// );
+
+// Clear existing dynamic rules
+// First, clear existing rules
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.declarativeNetRequest.updateDynamicRules(
+        { removeRuleIds: [1] },
+        () => {
+            console.log("Removed old rule with ID 1.");
+
+            // Add the rule
+            chrome.declarativeNetRequest.updateDynamicRules(
+                {
+                    addRules: [
+                        {
+                            id: 1,
+                            priority: 1,
+                            action: { type: "block" },
+                            condition: {
+                                urlFilter: "*://*.whatsapp.com/*",
+                                resourceTypes: ["websocket"]
+                            }
+                        }
+                    ]
+                },
+                () => {
+                    console.log("Added rule to block WhatsApp WebSocket.");
+                }
+            );
+        }
+    );
+});

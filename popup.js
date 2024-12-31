@@ -11,7 +11,7 @@ switches.forEach((ele) => {
         chrome.storage.local.get(ele.id, (res) => {
             chrome.storage.local.set({ [ele.id]: !res[ele.id] });
             ele.style.backgroundColor = res[ele.id] ? "red" : "green";
-            console.log(res[ele.id]);
+            // console.log(res[ele.id]);
         });
     });
 });

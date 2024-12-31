@@ -60,8 +60,16 @@ const decrypt = (str) => {
 };
 
 const verdict = async (val) => {
-    const state = await chrome.runtime.sendMessage({ propagator: val });
-    return state[val];
+    try {
+        const state = await chrome.runtime.sendMessage({ propagator: val });
+        if (state && val in state) {
+            return state[val];
+        }
+    }
+    catch (err) {
+        console.log(err);
+    }
+    return false;
 };
 
 const deconstruct = (box) => {
@@ -103,7 +111,6 @@ const linkage = (unlockedCypher) => {
 }
 
 
-let reference = [];
 
 
 const begin = async () => {
@@ -142,14 +149,16 @@ const begin = async () => {
             setTimeout(func, 500);
         }
     };
-
+    let reference = [];
+    let intervalid = null;
     const manipulate = async () => {
+        if (intervalid) clearInterval(intervalid);
         reference = [];
         let mainEl = document.querySelector("#main");
         if (mainEl.ariaLabel == "DARKNED")
             return;
         mainEl.ariaLabel = "DARKNED"
-        let boxno = 0;
+        let boxno = 0, protistart = true;
         const predecrypt = (x) => {
             if (x.startsWith("####")) {
 
@@ -158,6 +167,8 @@ const begin = async () => {
             return false;
         };
         const decryptionprotocol = async () => {
+
+            // console.log("decryption protocol initiated");
             const dlsc = await verdict("DSEC");
             const deco = await verdict("DEC");
 
@@ -171,7 +182,10 @@ const begin = async () => {
                 boxno = messboxes.length;
 
                 messboxes.forEach((box) => {
-                    let dataref = box.firstChild.dataset.id.slice(5, 17);
+                    let anc = 5;
+                    if (box.firstChild.dataset.id.charAt(anc) == '_') anc++;
+                    let dataref = box.firstChild.dataset.id.slice(anc, anc + 12);
+                    let messholder = null;
                     // console.log("dataref", dataref);
 
                     let mess = box.querySelectorAll(
@@ -181,30 +195,47 @@ const begin = async () => {
                         "span:not(:empty):has(a)"
                     );
                     if (mess.length == 3) {
-                        reference.push([dataref, decryption(mess[0])]);
+                        messholder = decryption(mess[0]);
                     }
                     else if (mess.length == 4) {
-                        reference.push([dataref, decryption(mess[1])]);
-                        // reference.dataref = decryption(mess[1]);
+                        messholder = decryption(mess[1]);
                     }
                     else if (mess.length == 5) {
                         decryption(mess[1]);
-                        // reference.dataref = decryption(mess[2]);
-                        reference.push([dataref, decryption(mess[2])]);
+                        messholder = decryption(mess[2]);
                     }
+                    if (protistart && messholder)
+                        reference.push(dataref, messholder)
+
                     if (limess.length === 2 && dlsc) {
                         limess[1].childNodes.forEach((node) => {
-                            if (node.nodeName === "A") {
+                            if (node.nodeName === "A" && node.innerHTML !== "@DARKLORD SECURED") {
                                 node.innerHTML = "@DARKLORD SECURED";
                             }
                             if (node.nodeName === "#text") {
-                                node.nodeValue = " <-> ";
+                                let sp = document.createElement("strong");
+                                sp.ariaLabel = node.nodeValue;
+                                sp.innerHTML = ' <-> ';
+                                node.parentNode.replaceChild(sp, node);
                             }
                         });
-                        ;
+
                         if (mess.length > 2) {
                             mess[0].parentElement.parentElement.parentElement.parentElement.remove();
                         }
+                    }
+
+                    if (!dlsc && limess.length === 2) {
+                        limess[1].childNodes.forEach((node) => {
+                            if (node.nodeName === "A" && node.innerHTML === "@DARKLORD SECURED") {
+                                node.innerHTML = node.title;
+                            }
+
+                            if (node.nodeName === "STRONG" && node.textContent == " <-> ") {
+                                let oriNode = document.createTextNode(node.ariaLabel);
+                                node.parentNode.replaceChild(oriNode, node);
+                            }
+                        });
                     }
                 });
             }
@@ -265,11 +296,12 @@ const begin = async () => {
                 powersend(decryptionprotocol);
             }
         });
-        setInterval(() => {
+        intervalid = setInterval(() => {
             if (document.querySelector("#main")) {
                 decryptionprotocol();
             }
-        }, 2000);
+        }, 1000);
+        protistart = false;
         console.log(reference);
     };
     const archadd = () => {
